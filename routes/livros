@@ -1,0 +1,73 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const router = express.Router();
+
+const filmeSchema = new mongoose.Schema({
+    titulo: String,
+    autor: String,
+    genero: String,
+    ano: Number,
+    paginas: Number,
+    disponivel: Boolean,
+    detalhes: Object
+});
+
+const Livro = mongoose.model('livros', filmeSchema);
+
+router.get('/livros', async (req, res) => {
+    try {
+        const livros = await Livro.find();
+        res.json(livros);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.post('/livros', async (req, res) => {
+    const { titulo, autor, genero, ano, paginas, disponivel, detalhes } = req.body;
+    const novoLivro = new Livro({
+        titulo,
+        autor,
+        genero,
+        ano,
+        paginas,
+        disponivel,
+        detalhes
+    });
+    try {
+        const livroSalvo = await novoLivro.save();
+        res.status(201).json(livroSalvo);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+router.delete('/livros/:id', async (req, res) => {
+    try {
+        const livroRemovido = await Livro.findByIdAndDelete(req.params.id);
+        if (!livroRemovido) {
+            return res.status(404).json({ message: 'Livro não encontrado' });
+        }
+        res.json({ message: 'Livro removido com sucesso' });
+    }
+        catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+router.put('/livros/:id', async (req, res) => {
+    try {
+        const livroAtualizado = await Livro.findByIdAndUpdate(req.params.id, req.body, {
+            new: true
+        });
+        if (!livroAtualizado) {
+            return res.status(404).json({ message: 'Livro não encontrado' });
+        }
+        res.json(livroAtualizado);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+module.exports = router;
